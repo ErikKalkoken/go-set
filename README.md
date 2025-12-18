@@ -1,6 +1,6 @@
 # go-set
 
-A modern, type-safe and idiomatic set implementation for Go (1.23+).
+A modern, type-safe and idiomatic set collection for Go (1.23+).
 
 ![GitHub Release](https://img.shields.io/github/v/release/ErikKalkoken/go-set)
 [![CI/CD](https://github.com/ErikKalkoken/go-set/actions/workflows/go.yml/badge.svg)](https://github.com/ErikKalkoken/go-set/actions/workflows/go.yml)
@@ -11,19 +11,18 @@ A modern, type-safe and idiomatic set implementation for Go (1.23+).
 
 ## Description
 
-`go-set` is a modern, type-safe and idiomatic set implementation for Go.
+`go-set` is a modern, type-safe and idiomatic set collection for Go.
 It leverages Go 1.23+ iterators and provides a clean, standard-library-like API.
 
 ## Features
 
 * **Type Safe**: Built with Go generics.
-* **Iterator Support**: Fully supports Go 1.23 `iter.Seq` for seamless loop integration.
-* **Zero Value**: Zero value is an empty set.
-* **Feature Complete**: Includes set algebra (Union, Intersection, Difference) and most functions from the slices standard library.
+* **Iterator Support**: Fully supports Go 1.23 iterators (`iter.Seq`).
+* **Familiar API**: API design similar to Go's slices package
+* **Usable Zero-Value**: Zero value is an empty set.
 * **JSON Support**: Built-in marshalling and unmarshaling.
-* **Test Friendly**: Designed with a disabled equality operator to prevent common testing pitfalls (use `Set.Equal` instead).
-* **No dependencies**: No external dependencies
-* **Fully documented**: Fully documented API with many examples.
+* **Dependency Free**: No external dependencies.
+* **Fully Documented**: Full API documentation and many examples.
 
 ## Installation
 
@@ -76,7 +75,7 @@ Here is how `go-set` compares:
 | --- | --- | --- |
 | **Generics** | Native (Go 1.18+) | Native (v2) / `interface{}` (v1) |
 | **Iterators** | Uses Go 1.23 standard `iter.Seq` | Uses custom `Iterator()` / `ToSlice()` |
-| **Concurrency** | Not thread-safe | Provides both Thread-safe and Unsafe versions |
+| **Concurrency** | Not thread-safe | Provides both thread-safe and non thread-safe versions |
 | **API Philosophy** | Minimalist, follows standard library style | Modeled after Python's set API |
 
 ### Why choose `go-set`?
@@ -87,4 +86,4 @@ into the new Go 1.23 iterator ecosystem and has clean, standard-library-like API
 ## Documentation
 
 For the full API documentation including many examples
-please see [Go Reference](https://pkg.go.dev/badge/github.com/ErikKalkoken/go-set.svg).
+please see: [Go Reference](https://pkg.go.dev/github.com/ErikKalkoken/go-set).

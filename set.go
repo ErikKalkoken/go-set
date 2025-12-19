@@ -1,13 +1,21 @@
 // Package set provides a generic set type and various related functions.
 //
+// # Using Set in tests
+//
 // For asserting equality of sets in tests we recommend using [Set.Equal]
-// as the equality comparison operator has been disabled
+// as the equality comparison operator does not work
 // and reflect.DeepEqual (e.g. used by assert.Equal) can give wrong results.
 // The below example shows how to assert equality between sets correctly:
 //
 //	  if !got.Equal(want) {
 //		   t.Errorf("got %q, wanted %q", got, want)
 //	  }
+//
+// # Zero sets
+//
+// The zero value of a Set or "zero set" is an empty set ready to use.
+// Zero sets are treated the same as empty sets
+// and preserved (e.g. Clone, JSON marshaling).
 package set
 
 import (
@@ -22,7 +30,9 @@ import (
 
 // A Set is an unordered collection of unique elements.
 //
-// The zero value of a Set is an empty set ready to use.
+// Sets don't need to be initialized as it's zero value is an empty set ready to use.
+// The equality comparison operator (==) does not work for Sets.
+// Instead [Set.Equal] should be used to compare sets.
 // Set is not safe for concurrent use.
 type Set[E comparable] struct {
 	m map[E]struct{}
@@ -30,6 +40,7 @@ type Set[E comparable] struct {
 }
 
 // Of returns a new set of the elements v.
+// Providing no elements will return an empty and initialized set.
 func Of[E comparable](v ...E) Set[E] {
 	var s Set[E]
 	s.Add(v...)
@@ -66,6 +77,7 @@ func (s Set[E]) Clear() {
 }
 
 // Clone returns a new set, which contains a shallow copy of all elements of set s.
+// Zero sets are preserved.
 func (s Set[E]) Clone() Set[E] {
 	return Set[E]{m: maps.Clone(s.m)}
 }
@@ -167,10 +179,23 @@ func (s Set[E]) Equal(u Set[E]) bool {
 	return true
 }
 
+// IsZero reports whether set s is a zero value.
+func (s Set[E]) IsZero() bool {
+	return s.m == nil
+}
+
 // MarshalJSON returns the JSON encoding of the set.
 // Sets are converted to JSON arrays.
+// Zero sets will be converted into JSON null.
 func (s Set[T]) MarshalJSON() ([]byte, error) {
-	return json.Marshal(slices.Collect(s.All()))
+	if s.m == nil {
+		return json.Marshal(nil)
+	}
+	v := make([]T, 0)
+	for x := range s.All() {
+		v = append(v, x)
+	}
+	return json.Marshal(v)
 }
 
 // Pop tries to remove and return an arbitrary element from s
@@ -197,19 +222,24 @@ func (s Set[E]) Size() int {
 // Sets are printed with curly brackets and sorted, e.g. {1 2}.
 func (s Set[E]) String() string {
 	var p []string
-	for v := range s.All() {
-		p = append(p, fmt.Sprint(v))
+	for x := range s.All() {
+		p = append(p, fmt.Sprint(x))
 	}
 	slices.Sort(p)
 	return "{" + strings.Join(p, " ") + "}"
 }
 
 // UnmarshalJSON parses the JSON-encoded data b and replaces the current set.
+// JSON null values will be unmarshaled into a zero set.
 func (s *Set[T]) UnmarshalJSON(b []byte) error {
 	var i []T
 	err := json.Unmarshal(b, &i)
 	if err != nil {
 		return err
+	}
+	if i == nil {
+		s.m = nil
+		return nil
 	}
 	s.Clear()
 	s.Add(i...)
@@ -217,7 +247,7 @@ func (s *Set[T]) UnmarshalJSON(b []byte) error {
 }
 
 // Collect collects values from seq into a new set and returns it.
-// If seq is empty, the result is an empty set.
+// If seq is empty, the result is a zero set.
 func Collect[E comparable](seq iter.Seq[E]) Set[E] {
 	var r Set[E]
 	for v := range seq {
@@ -244,7 +274,7 @@ func Difference[E comparable](s Set[E], others ...Set[E]) Set[E] {
 
 // Intersection returns a new [Set] with elements common to all sets.
 //
-// When less then 2 sets are provided they will be assumed to be empty.
+// When less then two sets are provided it returns an empty set.
 func Intersection[E comparable](sets ...Set[E]) Set[E] {
 	var r Set[E]
 	if len(sets) < 2 {
@@ -269,26 +299,74 @@ type comparableAndOrderable interface {
 
 // Max returns the maximal value in s. It panics if s is empty.
 func Max[E comparableAndOrderable](s Set[E]) E {
-	return slices.Max(slices.Collect(s.All()))
+	if s.Size() < 1 {
+		panic("set.Max: empty set")
+	}
+	var m E
+	for x := range s.All() {
+		m = x
+		break
+	}
+	for x := range s.All() {
+		m = max(m, x)
+	}
+	return m
 }
 
 // MaxFunc returns the maximal value in s, using cmp to compare elements.
 // It panics if s is empty.
 // If there is more than one maximal element according to the cmp function, MaxFunc returns the first one.
 func MaxFunc[E comparable](s Set[E], cmp func(a, b E) int) E {
-	return slices.MaxFunc(slices.Collect(s.All()), cmp)
+	if s.Size() < 1 {
+		panic("set.MaxFunc: empty set")
+	}
+	var m E
+	for x := range s.All() {
+		m = x
+		break
+	}
+	for x := range s.All() {
+		if cmp(x, m) > 0 {
+			m = x
+		}
+	}
+	return m
 }
 
 // Min returns the minimal value in s. It panics if s is empty.
 func Min[E comparableAndOrderable](s Set[E]) E {
-	return slices.Min(slices.Collect(s.All()))
+	if s.Size() < 1 {
+		panic("set.Min: empty set")
+	}
+	var m E
+	for x := range s.All() {
+		m = x
+		break
+	}
+	for x := range s.All() {
+		m = min(m, x)
+	}
+	return m
 }
 
 // MinFunc returns the minimal value in s, using cmp to compare elements.
 // It panics if s is empty.
 // If there is more than one minimal element according to the cmp function, MinFunc returns the first one.
 func MinFunc[E comparable](s Set[E], cmp func(a, b E) int) E {
-	return slices.MinFunc(slices.Collect(s.All()), cmp)
+	if s.Size() < 1 {
+		panic("set.MinFunc: empty set")
+	}
+	var m E
+	for x := range s.All() {
+		m = x
+		break
+	}
+	for x := range s.All() {
+		if cmp(x, m) < 0 {
+			m = x
+		}
+	}
+	return m
 }
 
 // Union returns a new [Set] with the elements of all sets.

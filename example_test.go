@@ -112,9 +112,16 @@ func ExampleUnion() {
 }
 
 func ExampleOf() {
-	s := set.Of(1, 2, 2)
-	fmt.Println(s)
-	// Output: {1 2}
+	s1 := set.Of(1, 2, 2)
+	s2 := set.Of([]int{3, 4}...)
+	s3 := set.Of[int]()
+	fmt.Println(s1)
+	fmt.Println(s2)
+	fmt.Println(s3)
+	// Output:
+	// {1 2}
+	// {3 4}
+	// {}
 }
 
 func ExampleSet_Add() {
@@ -231,6 +238,16 @@ func ExampleSet_Equal() {
 	s := set.Of(1, 2)
 	fmt.Println(s.Equal(set.Of(1, 2)))
 	fmt.Println(s.Equal(set.Of(1, 3)))
+	// Output:
+	// true
+	// false
+}
+
+func ExampleSet_IsZero() {
+	var s1 set.Set[int]
+	s2 := set.Of[int]()
+	fmt.Println(s1.IsZero())
+	fmt.Println(s2.IsZero())
 	// Output:
 	// true
 	// false

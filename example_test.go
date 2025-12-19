@@ -253,17 +253,6 @@ func ExampleSet_Size() {
 	// Output: 3
 }
 
-func ExampleSet_Slice() {
-	s := set.Of(1, 2, 3)
-	for _, x := range s.Slice() {
-		fmt.Println(x)
-	}
-	// Unordered output:
-	// 1
-	// 2
-	// 3
-}
-
 func ExampleSet_String() {
 	s := set.Of(1, 2, 3)
 	fmt.Println(s)

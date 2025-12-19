@@ -66,7 +66,7 @@ func main() {
 }
 ```
 
-## Comparison with `deckarep/golang-set`
+## Comparison with other set implementations
 
 `deckarep/golang-set` is one of the the most popular set implementations for Go.
 Here is how `go-set` compares:

@@ -81,19 +81,26 @@ func TestSet_All(t *testing.T) {
 
 func TestSet_Clone(t *testing.T) {
 	cases := []struct {
-		name string
-		s    set.Set[int]
-		want set.Set[int]
+		name       string
+		s          set.Set[int]
+		wantResult set.Set[int]
+		wantZero   bool
 	}{
-		{"non-empty", set.Of(1), set.Of(1)},
-		{"empty", set.Of[int](), set.Of[int]()},
-		{"zero", set.Set[int]{}, set.Of[int]()},
+		{"non-empty", set.Of(1), set.Of(1), false},
+		{"empty", set.Of[int](), set.Of[int](), false},
+		{"zero", set.Set[int]{}, set.Set[int]{}, true},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			got := tc.s.Clone()
-			if !got.Equal(tc.want) {
+			if !got.Equal(tc.wantResult) {
 				t.Errorf("got %q, wanted %q", got, tc.s)
+			}
+			if tc.wantZero && !got.IsZero() {
+				t.Errorf("wanted zero set")
+			}
+			if !tc.wantZero && got.IsZero() {
+				t.Errorf("did not want zero set")
 			}
 		})
 	}
@@ -336,20 +343,100 @@ func TestSet_DeleteSeq(t *testing.T) {
 	}
 }
 
+func TestSet_IsZero(t *testing.T) {
+	cases := []struct {
+		name string
+		s    set.Set[int]
+		want bool
+	}{
+		{"non-empty 2 elements", set.Of(1, 2), false},
+		{"non-empty 1 element", set.Of(1), false},
+		{"empty", set.Of[int](), false},
+		{"zero", set.Set[int]{}, true},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := tc.s.IsZero()
+			if got != tc.want {
+				t.Errorf("got %v, wanted %v", got, tc.want)
+			}
+		})
+	}
+}
+
 func TestSet_MarshallJSON(t *testing.T) {
-	t.Run("can marshal/unmarshal into zero set", func(t *testing.T) {
-		s1 := set.Of(1, 2, 3)
-		b, err := json.Marshal(s1)
-		if err != nil {
-			t.Fatal(err)
+	t.Run("can marshal", func(t *testing.T) {
+		cases := []struct {
+			name          string
+			s             set.Set[int]
+			wantAnyResult set.Set[string]
+			wantError     bool
+		}{
+			{"one element", set.Of(1), set.Of("[1]"), false},
+			{"multiple elements", set.Of(1, 2), set.Of("[1,2]", "[2,1]"), false},
+			{"empty set", set.Of[int](), set.Of("[]"), false},
+			{"zero set", set.Set[int]{}, set.Of("null"), false},
 		}
-		var s2 set.Set[int]
-		err = json.Unmarshal(b, &s2)
-		if err != nil {
-			t.Fatal(err)
+		for _, tc := range cases {
+			t.Run(tc.name, func(t *testing.T) {
+				got, err := tc.s.MarshalJSON()
+				if tc.wantError {
+					if err == nil {
+						t.Errorf("got %q, wanted error", err)
+					}
+					return
+				} else {
+					if err != nil {
+						t.Errorf("got %q, wanted no error", err)
+					}
+				}
+				got2 := string(got)
+				if !tc.wantAnyResult.Contains(got2) {
+					t.Errorf("got %q, wanted any of %q", got2, tc.wantAnyResult)
+				}
+			})
 		}
-		if !s2.Equal(s1) {
-			t.Errorf("got %q, wanted %q", s2, s1)
+	})
+}
+
+func TestSet_UnmarshallJSON(t *testing.T) {
+	t.Run("can unmarshal", func(t *testing.T) {
+		cases := []struct {
+			name       string
+			in         string
+			wantResult set.Set[int]
+			wantZero   bool
+			wantError  bool
+		}{
+			{"one element", "[1]", set.Of(1), false, false},
+			{"multiple elements", "[1,2]", set.Of(1, 2), false, false},
+			{"empty set", "[]", set.Of[int](), false, false},
+			{"zero set", "null", set.Set[int]{}, true, false},
+		}
+		for _, tc := range cases {
+			t.Run(tc.name, func(t *testing.T) {
+				var s set.Set[int]
+				err := s.UnmarshalJSON([]byte(tc.in))
+				if tc.wantError {
+					if err == nil {
+						t.Errorf("got %q, wanted error", err)
+					}
+					return
+				} else {
+					if err != nil {
+						t.Errorf("got %q, wanted no error", err)
+					}
+				}
+				if !s.Equal(tc.wantResult) {
+					t.Errorf("got %q, wanted %q", s, tc.wantResult)
+				}
+				if tc.wantZero && !s.IsZero() {
+					t.Errorf("wanted zero set")
+				}
+				if !tc.wantZero && s.IsZero() {
+					t.Errorf("did not want zero set")
+				}
+			})
 		}
 	})
 	t.Run("should overwrite existing set", func(t *testing.T) {
@@ -478,18 +565,25 @@ func TestOf(t *testing.T) {
 
 func TestCollect(t *testing.T) {
 	cases := []struct {
-		name string
-		seq  iter.Seq[int]
-		want set.Set[int]
+		name       string
+		seq        iter.Seq[int]
+		wantResult set.Set[int]
+		wantZero   bool
 	}{
-		{"non-empty sequence", set.Of(1, 2).All(), set.Of(1, 2)},
-		{"empty sequence", set.Of[int]().All(), set.Of[int]()},
+		{"non-empty sequence", set.Of(1, 2).All(), set.Of(1, 2), false},
+		{"empty sequence", set.Of[int]().All(), set.Set[int]{}, true},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			got := set.Collect(tc.seq)
-			if !got.Equal(tc.want) {
-				t.Errorf("got %q, wanted %q", got, tc.want)
+			if !got.Equal(tc.wantResult) {
+				t.Errorf("got %q, wanted %q", got, tc.wantResult)
+			}
+			if tc.wantZero && !got.IsZero() {
+				t.Errorf("wanted zero set")
+			}
+			if !tc.wantZero && got.IsZero() {
+				t.Errorf("did not want zero set")
 			}
 		})
 	}
@@ -556,7 +650,7 @@ func TestMax(t *testing.T) {
 		want        int
 		shouldPanic bool
 	}{
-		{"several items", set.Of(1, 3), 3, false},
+		{"several items", set.Of(1, 3, 2), 3, false},
 		{"one item", set.Of(1), 1, false},
 		{"empty", set.Of[int](), 0, true},
 		{"zero", set.Set[int]{}, 0, true},
@@ -587,7 +681,7 @@ func TestMaxFunc(t *testing.T) {
 		want        int
 		shouldPanic bool
 	}{
-		{"several items", set.Of(1, 3), 3, false},
+		{"several items", set.Of(1, 3, 2), 3, false},
 		{"one item", set.Of(1), 1, false},
 		{"empty", set.Of[int](), 0, true},
 		{"zero", set.Set[int]{}, 0, true},
@@ -622,7 +716,7 @@ func TestMin(t *testing.T) {
 		want        int
 		shouldPanic bool
 	}{
-		{"several items", set.Of(1, 3), 1, false},
+		{"several items", set.Of(2, 1, 3), 1, false},
 		{"one item", set.Of(1), 1, false},
 		{"empty", set.Of[int](), 0, true},
 		{"zero", set.Set[int]{}, 0, true},
@@ -653,7 +747,7 @@ func TestMinFunc(t *testing.T) {
 		want        int
 		shouldPanic bool
 	}{
-		{"several items", set.Of(1, 3), 1, false},
+		{"several items", set.Of(2, 1, 3), 1, false},
 		{"one item", set.Of(1), 1, false},
 		{"empty", set.Of[int](), 0, true},
 		{"zero", set.Set[int]{}, 0, true},

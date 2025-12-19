@@ -4,7 +4,6 @@ import (
 	"cmp"
 	"encoding/json"
 	"iter"
-	"reflect"
 	"testing"
 
 	"github.com/ErikKalkoken/go-set"
@@ -337,7 +336,7 @@ func TestSet_DeleteSeq(t *testing.T) {
 	}
 }
 
-func TestSet_JSONMarshalling(t *testing.T) {
+func TestSet_MarshallJSON(t *testing.T) {
 	t.Run("can marshal/unmarshal into zero set", func(t *testing.T) {
 		s1 := set.Of(1, 2, 3)
 		b, err := json.Marshal(s1)
@@ -453,27 +452,6 @@ func TestSet_String(t *testing.T) {
 			got := s.String()
 			if tc.want != got {
 				t.Errorf("got %q, wanted %q", got, tc.want)
-			}
-		})
-	}
-}
-
-func TestSet_Slice(t *testing.T) {
-	var nilSlice []int
-	cases := []struct {
-		name string
-		s    set.Set[int]
-		want []int
-	}{
-		{"non-empty", set.Of(1), []int{1}},
-		{"empty", set.Of[int](), nilSlice},
-		{"zero", set.Set[int]{}, nilSlice},
-	}
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			got := tc.s.Slice()
-			if !reflect.DeepEqual(got, tc.want) {
-				t.Errorf("got %v, wanted %v", got, tc.want)
 			}
 		})
 	}

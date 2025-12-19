@@ -167,6 +167,12 @@ func (s Set[E]) Equal(u Set[E]) bool {
 	return true
 }
 
+// MarshalJSON returns the JSON encoding of the set.
+// Sets are converted to JSON arrays.
+func (s Set[T]) MarshalJSON() ([]byte, error) {
+	return json.Marshal(slices.Collect(s.All()))
+}
+
 // Pop tries to remove and return an arbitrary element from s
 // and reports whether it was successful.
 func (s Set[E]) Pop() (E, bool) {
@@ -196,19 +202,6 @@ func (s Set[E]) String() string {
 	}
 	slices.Sort(p)
 	return "{" + strings.Join(p, " ") + "}"
-}
-
-// Slice creates a new slice from the elements of set s and returns it.
-//
-// Note that the order of elements is undefined.
-func (s Set[E]) Slice() []E {
-	return slices.Collect(s.All())
-}
-
-// MarshalJSON returns the JSON encoding of the set.
-// Sets are converted to JSON arrays.
-func (s Set[T]) MarshalJSON() ([]byte, error) {
-	return json.Marshal(s.Slice())
 }
 
 // UnmarshalJSON parses the JSON-encoded data b and replaces the current set.
@@ -276,26 +269,26 @@ type comparableAndOrderable interface {
 
 // Max returns the maximal value in s. It panics if s is empty.
 func Max[E comparableAndOrderable](s Set[E]) E {
-	return slices.Max(s.Slice())
+	return slices.Max(slices.Collect(s.All()))
 }
 
 // MaxFunc returns the maximal value in s, using cmp to compare elements.
 // It panics if s is empty.
 // If there is more than one maximal element according to the cmp function, MaxFunc returns the first one.
 func MaxFunc[E comparable](s Set[E], cmp func(a, b E) int) E {
-	return slices.MaxFunc(s.Slice(), cmp)
+	return slices.MaxFunc(slices.Collect(s.All()), cmp)
 }
 
 // Min returns the minimal value in s. It panics if s is empty.
 func Min[E comparableAndOrderable](s Set[E]) E {
-	return slices.Min(s.Slice())
+	return slices.Min(slices.Collect(s.All()))
 }
 
 // MinFunc returns the minimal value in s, using cmp to compare elements.
 // It panics if s is empty.
 // If there is more than one minimal element according to the cmp function, MinFunc returns the first one.
 func MinFunc[E comparable](s Set[E], cmp func(a, b E) int) E {
-	return slices.MinFunc(s.Slice(), cmp)
+	return slices.MinFunc(slices.Collect(s.All()), cmp)
 }
 
 // Union returns a new [Set] with the elements of all sets.

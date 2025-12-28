@@ -629,7 +629,7 @@ func TestIntersection(t *testing.T) {
 		{"non-empty with zero", []set.Set[int]{set.Of(1), {}}, set.Of[int]()},
 		{"zero with non-empty", []set.Set[int]{{}, set.Of(1)}, set.Of[int]()},
 		{"zero with itself", []set.Set[int]{{}, {}}, set.Of[int]()},
-		{"non-empty with 2 other", []set.Set[int]{set.Of(1, 2, 3), set.Of(2, 3, 4), set.Of(2, 5, 6)}, set.Of(2)},
+		{"non-empty with 2 others", []set.Set[int]{set.Of(1, 2, 3), set.Of(2, 3, 4), set.Of(2, 5, 6)}, set.Of(2)},
 		{"only one non-empty set provided", []set.Set[int]{set.Of(1, 2, 3)}, set.Of[int]()},
 		{"no sets provided", []set.Set[int]{}, set.Of[int]()},
 	}
@@ -788,6 +788,8 @@ func TestUnion(t *testing.T) {
 		{"non-empty with zero", []set.Set[int]{set.Of(1), {}}, set.Of(1)},
 		{"zero with itself", []set.Set[int]{{}, {}}, set.Of[int]()},
 		{"multiple non-empty", []set.Set[int]{set.Of(1, 2), set.Of(2, 3), set.Of(3, 4)}, set.Of(1, 2, 3, 4)},
+		{"one non-empty set only", []set.Set[int]{set.Of(1)}, set.Of(1)},
+		{"no sets", []set.Set[int]{}, set.Of[int]()},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

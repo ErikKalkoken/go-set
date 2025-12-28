@@ -165,10 +165,12 @@ func (s Set[E]) DeleteSeq(seq iter.Seq[E]) int {
 // Equal reports whether sets s and u are equal.
 // A zero set will be reported equal to an (initialized) empty set.
 func (s Set[E]) Equal(u Set[E]) bool {
-	if len(s.m) != len(u.m) {
+	l1 := len(s.m)
+	l2 := len(u.m)
+	if l1 != l2 {
 		return false
 	}
-	if len(s.m) == 0 && len(u.m) == 0 {
+	if l1 == 0 && l2 == 0 {
 		return true
 	}
 	for v := range s.m {
@@ -258,12 +260,18 @@ func Collect[E comparable](seq iter.Seq[E]) Set[E] {
 
 // Difference constructs a new [Set] containing the elements of s
 // that are not present in the union of others.
+// When no others are provided it returns a set with the elements of s.
 func Difference[E comparable](s Set[E], others ...Set[E]) Set[E] {
-	if len(others) == 0 {
+	l := len(others)
+	if l == 0 {
 		return s
 	}
-	var r Set[E]
-	o := Union(others...)
+	var r, o Set[E]
+	if l == 1 {
+		o = others[0]
+	} else {
+		o = Union(others...)
+	}
 	for v := range s.m {
 		if !o.Contains(v) {
 			r.Add(v)
@@ -273,11 +281,27 @@ func Difference[E comparable](s Set[E], others ...Set[E]) Set[E] {
 }
 
 // Intersection returns a new [Set] with elements common to all sets.
-//
 // When less then two sets are provided it returns an empty set.
 func Intersection[E comparable](sets ...Set[E]) Set[E] {
 	var r Set[E]
-	if len(sets) < 2 {
+	l := len(sets)
+	if l < 2 {
+		return r
+	}
+	if l == 2 {
+		var walk, other Set[E]
+		if sets[0].Size() < sets[1].Size() {
+			walk = sets[0]
+			other = sets[1]
+		} else {
+			walk = sets[1]
+			other = sets[0]
+		}
+		for v := range walk.m {
+			if other.Contains(v) {
+				r.Add(v)
+			}
+		}
 		return r
 	}
 L:
@@ -369,12 +393,31 @@ func MinFunc[E comparable](s Set[E], cmp func(a, b E) int) E {
 	return m
 }
 
-// Union returns a new [Set] with the elements of all sets.
+// Union returns a new [Set] with has the combined elements of all provided sets.
+// When no sets are provided it returns an empty set.
 func Union[E comparable](sets ...Set[E]) Set[E] {
-	var r Set[E]
-	for _, s := range sets {
+	l := len(sets)
+	if l == 0 {
+		var z Set[E]
+		return z
+	}
+	r := sets[0].Clone()
+	if l == 1 {
+		return r
+	}
+	if l == 2 {
+		for v := range sets[1].m {
+			if !r.Contains(v) {
+				r.Add(v)
+			}
+		}
+		return r
+	}
+	for _, s := range sets[1:] {
 		for v := range s.m {
-			r.Add(v)
+			if !r.Contains(v) {
+				r.Add(v)
+			}
 		}
 	}
 	return r

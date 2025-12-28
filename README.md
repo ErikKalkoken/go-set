@@ -68,18 +68,18 @@ func main() {
 
 ## Performance comparison
 
-We have compared the performance of **go-set** ("goset") with two popular set libraries:
+We have compared the performance of **go-set** (`goset`) with two popular set libraries:
 
-* github.com/deckarep/golang-set ("golangset")
-* k8s.io/apimachinery/pkg/util/sets ("k8ssets")
+* [github.com/deckarep/golang-set](https://pkg.go.dev/github.com/deckarep/golang-set/v2) (`golangset`)
+* [k8s.io/apimachinery/pkg/util/sets](https://pkg.go.dev/k8s.io/apimachinery/pkg/util/sets) (`k8ssets`)
 
-Our findings show that **goset** consistently outperforms both **golangset** and **k8ssets** across nearly every performance metric, demonstrating superior speed and memory efficiency.
+The benchmarks measure the performance of commonly used set operations and we then compare the results of `goset` with `golangset` and `k8ssets`. All benchmarks were performed on a Linux amd64 system with an Intel Core i5-10210U CPU.
 
-This summary compares the performance of **goset** against **golangset** and **k8ssets** across various set operations. All benchmarks were performed on a Linux amd64 system with an Intel Core i5-10210U CPU.
+Our findings show that `goset` consistently outperforms both `golangset` and `k8ssets` across nearly every performance metric, demonstrating superior speed and memory efficiency.
 
 ### Performance Summary Table
 
-| Operation | Metric | golangset | k8ssets | **goset** |
+| Operation | Metric | `golangset` | `k8ssets` | `goset` |
 | :--- | :--- | :--- | :--- | :--- |
 | **Membership** | Time (sec/op) | $31.835\text{ ns}$ | $8.024\text{ ns}$ | **$7.670\text{ ns}$** |
 | | Memory (B/op) | $8.00\text{ B}$ | $0.00\text{ B}$ | **$0.00\text{ B}$** |

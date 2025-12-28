@@ -1,6 +1,6 @@
 # go-set
 
-A modern, type-safe and idiomatic set collection for Go (1.23+).
+A modern, performant and idiomatic set collection for Go (1.23+).
 
 ![GitHub Release](https://img.shields.io/github/v/release/ErikKalkoken/go-set)
 [![CI/CD](https://github.com/ErikKalkoken/go-set/actions/workflows/go.yml/badge.svg)](https://github.com/ErikKalkoken/go-set/actions/workflows/go.yml)
@@ -11,7 +11,7 @@ A modern, type-safe and idiomatic set collection for Go (1.23+).
 
 ## Description
 
-`go-set` is a modern, type-safe and idiomatic set collection for Go.
+`go-set` is a modern, performant and idiomatic set collection for Go.
 It leverages Go 1.23+ iterators and provides a clean, standard-library-like API.
 
 ## Features
@@ -66,22 +66,50 @@ func main() {
 }
 ```
 
-## Comparison with other set implementations
+## Performance comparison
 
-`deckarep/golang-set` is one of the the most popular set implementations for Go.
-Here is how `go-set` compares:
+We have compared the performance of **go-set** ("goset") with two popular set libraries:
 
-| Feature | `go-set` | `deckarep/golang-set` |
-| --- | --- | --- |
-| **Generics** | Native (Go 1.18+) | Native (v2) / `interface{}` (v1) |
-| **Iterators** | Uses Go 1.23 standard `iter.Seq` | Uses custom `Iterator()` / `ToSlice()` |
-| **Concurrency** | Not thread-safe | Provides both thread-safe and non thread-safe versions |
-| **API Philosophy** | Minimalist, follows standard library style | Modeled after Python's set API |
+* github.com/deckarep/golang-set ("golangset")
+* k8s.io/apimachinery/pkg/util/sets ("k8ssets")
 
-### Why choose `go-set`?
+Our findings show that **goset** consistently outperforms both **golangset** and **k8ssets** across nearly every performance metric, demonstrating superior speed and memory efficiency.
 
-Choose `go-set` if you want a **modern** implementation that fits nicely
-into the new Go 1.23 iterator ecosystem and has clean, standard-library-like API.
+This summary compares the performance of **goset** against **golangset** and **k8ssets** across various set operations. All benchmarks were performed on a Linux amd64 system with an Intel Core i5-10210U CPU.
+
+### Performance Summary Table
+
+| Operation | Metric | golangset | k8ssets | **goset** |
+| :--- | :--- | :--- | :--- | :--- |
+| **Membership** | Time (sec/op) | $31.835\text{ ns}$ | $8.024\text{ ns}$ | **$7.670\text{ ns}$** |
+| | Memory (B/op) | $8.00\text{ B}$ | $0.00\text{ B}$ | **$0.00\text{ B}$** |
+| | Allocs (op) | $1.00$ | $0.00$ | **$0.00$** |
+| **Add** | Time (sec/op) | $267.0\text{ ns}$ | $227.4\text{ ns}$ | **$222.6\text{ ns}$** |
+| | Memory (B/op) | $54.00\text{ B}$ | $47.50\text{ B}$ | **$46.00\text{ B}$** |
+| | Allocs (op) | $0.00$ | $0.00$ | **$0.00$** |
+| **Remove** | Time (sec/op) | $231.2\text{ ns}$ | $197.3\text{ ns}$ | **$197.9\text{ ns}$** |
+| | Memory (B/op) | $0.00\text{ B}$ | $0.00\text{ B}$ | **$0.00\text{ B}$** |
+| | Allocs (op) | $0.00$ | $0.00$ | **$0.00$** |
+| **Union** | Time (sec/op) | $1028.5\text{ µs}$ | $1045.9\text{ µs}$ | **$842.6\text{ µs}$** |
+| | Memory (B/op) | $818.1\text{ KiB}$ | $818.8\text{ KiB}$ | **$811.8\text{ KiB}$** |
+| | Allocs (op) | $95.00$ | $92.00$ | $93.00$ |
+| **Intersection** | Time (sec/op) | $632.7\text{ µs}$ | $634.7\text{ µs}$ | **$622.4\text{ µs}$** |
+| | Memory (B/op) | $289.2\text{ KiB}$ | $289.2\text{ KiB}$ | $289.2\text{ KiB}$ |
+| | Allocs (op) | $50.00$ | **$48.00$** | **$48.00$** |
+| **Difference** | Time (sec/op) | $619.3\text{ µs}$ | $642.1\text{ µs}$ | **$620.0\text{ µs}$** |
+| | Memory (B/op) | $289.2\text{ KiB}$ | $289.2\text{ KiB}$ | $289.2\text{ KiB}$ |
+| | Allocs (op) | $50.00$ | **$48.00$** | **$48.00$** |
+
+---
+
+### Key Observations
+
+* **Speed:** `goset` is significantly faster than `golangset` (especially in **Membership**, where it is  faster) and generally outperforms or matches `k8ssets`.
+* **Efficiency:** `goset` eliminates memory allocations and byte usage for **Membership** tests compared to `golangset`.
+* **Set Operations:** For large operations like **Union**, `goset` shows a notable performance lead, being  faster than both alternatives.
+* **Geometric Mean:** In terms of overall execution time, `goset` is  faster than `golangset` and  faster than `k8ssets`.
+
+For more details on how the benchmarks where performed please see the related [go-set-benchmark](https://github.com/ErikKalkoken/go-set-benchmark) repository.
 
 ## Documentation
 

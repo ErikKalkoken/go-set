@@ -1,6 +1,6 @@
 # go-set
 
-A modern, performant and idiomatic set collection for Go (1.23+).
+A modern, idiomatic and fast set collection for Go.
 
 ![GitHub Release](https://img.shields.io/github/v/release/ErikKalkoken/go-set)
 [![CI/CD](https://github.com/ErikKalkoken/go-set/actions/workflows/go.yml/badge.svg)](https://github.com/ErikKalkoken/go-set/actions/workflows/go.yml)
@@ -9,28 +9,47 @@ A modern, performant and idiomatic set collection for Go (1.23+).
 ![GitHub License](https://img.shields.io/github/license/ErikKalkoken/go-set)
 [![Go Reference](https://pkg.go.dev/badge/github.com/ErikKalkoken/go-set.svg)](https://pkg.go.dev/github.com/ErikKalkoken/go-set)
 
+## Content
+
+- [Description](#description)
+- [Features](#features)
+- [Installation](#installation)
+- [Quick start](#quick-start)
+- [Performance comparison](#performance-comparison)
+- [Used by](#used-by)
+- [Documentation](#documentation)
+
 ## Description
 
-`go-set` is a modern, performant and idiomatic set collection for Go.
-It leverages Go 1.23+ iterators and provides a clean, standard-library-like API.
+`go-set` is a type-safe set collection for Go 1.23+ with a standard library like API.
+It's zero value is ready to use - no initialization needed.
+The implementation is fast and memory efficient.
 
 ## Features
 
-* **Type Safe**: Built with Go generics.
-* **Iterator Support**: Fully supports Go 1.23 iterators (`iter.Seq`).
-* **Familiar API**: API design similar to Go's slices package
-* **Usable Zero-Value**: Zero value is an empty set.
-* **JSON Support**: Built-in marshalling and unmarshaling.
-* **Dependency Free**: No external dependencies.
-* **Fully Documented**: Full API documentation and many examples.
+- **Type Safe**: Sets are built with Go generics to provide type safety.
+- **Usable Zero-Value**: The zero value is ready to use - no initialization needed.
+- **Familiar API**: The API design is similar to Go's slices package.
+- **Top performance**: Outperforms or matches other popular set libraries.
+- **Standard iterators**: First-class support of Go's 1.23+ standard iterators.
+- **JSON Support**: Built-in marshalling and unmarshaling for JSON.
+- **Dependency Free**: No external dependencies.
+- **Fully tested**: Fully tested with 100% coverage.
+- **Fully Documented**: Full API documentation with many examples.
+
+Please note that **go-set** is not save to use concurrently, as it prioritizes performance over thread-safety.
 
 ## Installation
+
+You can add this library to your Go module with the following command:
 
 ```bash
 go get github.com/ErikKalkoken/go-set
 ```
 
 ## Quick Start
+
+The following code example showcases many features of **go-set**:
 
 ```go
 package main
@@ -41,25 +60,38 @@ import (
 )
 
 func main() {
-    // Initialization
-    s1 := set.Of(1, 2, 3, 4)
-    s2 := set.Of(3, 4, 5, 6)
+    // Declaring a new set of integers
+	var s1 set.Set[int]
 
-    // Basic Operations
-    s1.Add(7)
-    s1.Delete(1)
+	// Basic Operations
+	s1.Add(7, 1, 2, 3, 4) // Add multiple elements
+	s1.Delete(1)          // Remove an element
 
-    // Membership
-    if s1.Contains(3) {
-        fmt.Println("Set 1 contains 3")
-    }
+	fmt.Println("Set 1:", s1) // {2 3 4 7} (Sorted in output)
+	fmt.Printf("Size of s1: %d\n", s1.Size())
 
-    // Set Algebra
-    u := set.Union(s1, s2)        // {2 3 4 5 6 7}
-    i := set.Intersection(s1, s2) // {3 4}
-    d := set.Difference(s1, s2)   // {2 7}
+	// Membership Checks
+	if s1.Contains(3) {
+		fmt.Println("Set 1 contains 3")
+	}
 
-    // Iterator Support (Go 1.23+)
+	// Creating a new set from a list of integers
+	s2 := set.Of(3, 4, 5, 6)
+
+	// Set Algebra (Union, Intersection, Difference)
+	// Union: All elements from both sets
+	u := set.Union(s1, s2)
+	fmt.Println("Union:", u) // {2 3 4 5 6 7}
+
+	// Intersection: Only elements present in both sets
+	i := set.Intersection(s1, s2)
+	fmt.Println("Intersection:", i) // {3 4}
+
+	// Difference: Elements in s1 that are NOT in s2
+	d := set.Difference(s1, s2)
+	fmt.Println("Difference (s1 - s2):", d) // {2 7}
+
+    // Ranging over set elements
     for v := range s1.All() {
         fmt.Println(v)
     }
@@ -68,19 +100,29 @@ func main() {
 
 ## Performance comparison
 
-We have compared the performance of **go-set** (`goset`) with two popular set libraries:
+We have benchmarked the performance of **go-set** (`goset`) and compared it with the two very popular set libraries:
 
-* [github.com/deckarep/golang-set](https://pkg.go.dev/github.com/deckarep/golang-set/v2) (`golangset`)
-* [k8s.io/apimachinery/pkg/util/sets](https://pkg.go.dev/k8s.io/apimachinery/pkg/util/sets) (`k8ssets`)
+- [github.com/deckarep/golang-set](https://pkg.go.dev/github.com/deckarep/golang-set/v2) (`golangset`)[^1]
+- [k8s.io/apimachinery/pkg/util/sets](https://pkg.go.dev/k8s.io/apimachinery/pkg/util/sets) (`k8ssets`)
 
-The benchmarks measure the performance of commonly used set operations and we then compare the results of `goset` with `golangset` and `k8ssets`. All benchmarks were performed on a Linux amd64 system with an Intel Core i5-10210U CPU.
+Our measurements show that `goset` consistently outperforms both `golangset` and `k8ssets`across nearly every performance metric,
+demonstrating superior speed and memory efficiency.
 
-Our findings show that `goset` consistently outperforms both `golangset` and `k8ssets` across nearly every performance metric, demonstrating superior speed and memory efficiency.
+[^1]: We used the non-threads safe variant since all the other libraries are also not thread safe.
 
-### Performance Summary Table
+### Approach
+
+The benchmarks measure the performance of common set operations for each of the libraries with with set sizes of 10,000 elements.
+They were run 10 times to ensure statistically significant data and we used benchstat to compare the results.
+All benchmarks were performed on a Linux amd64 system with an Intel Core i5-10210U CPU.
+The detailed results can be found here: [go-set-benchmark](https://github.com/ErikKalkoken/go-set-benchmark)
+
+### Results
+
+The following table shows a summary of the benchmarks results.
 
 | Operation | Metric | `golangset` | `k8ssets` | `goset` |
-| :--- | :--- | :--- | :--- | :--- |
+| :--- | :--- | ---: | ---: | ---: |
 | **Membership** | Time (sec/op) | $31.835\text{ ns}$ | $8.024\text{ ns}$ | **$7.670\text{ ns}$** |
 | | Memory (B/op) | $8.00\text{ B}$ | $0.00\text{ B}$ | **$0.00\text{ B}$** |
 | | Allocs (op) | $1.00$ | $0.00$ | **$0.00$** |
@@ -102,14 +144,11 @@ Our findings show that `goset` consistently outperforms both `golangset` and `k8
 
 ---
 
-### Key Observations
+## Used by
 
-* **Speed:** `goset` is significantly faster than `golangset` (especially in **Membership**, where it is  faster) and generally outperforms or matches `k8ssets`.
-* **Efficiency:** `goset` eliminates memory allocations and byte usage for **Membership** tests compared to `golangset`.
-* **Set Operations:** For large operations like **Union**, `goset` shows a notable performance lead, being  faster than both alternatives.
-* **Geometric Mean:** In terms of overall execution time, `goset` is  faster than `golangset` and  faster than `k8ssets`.
+The following projects are using **go-set**:
 
-For more details on how the benchmarks where performed please see the related [go-set-benchmark](https://github.com/ErikKalkoken/go-set-benchmark) repository.
+- [EVE buddy](https://github.com/ErikKalkoken/evebuddy) - EVE Buddy is a companion app for Eve Online players available on Windows, macOS, Linux and Android.
 
 ## Documentation
 

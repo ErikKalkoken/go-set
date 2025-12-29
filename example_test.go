@@ -9,24 +9,25 @@ import (
 )
 
 func Example() {
-	// 1. Initialization
-	// Create a new set of integers
-	s1 := set.Of(1, 2, 3, 4)
-	s2 := set.Of(3, 4, 5, 6)
+	// Declaring a new set of integers
+	var s1 set.Set[int]
 
-	// 2. Basic Operations
-	s1.Add(7)    // Add a single element
-	s1.Delete(1) // Remove an element
+	// Basic Operations
+	s1.Add(7, 1, 2, 3, 4) // Add multiple elements
+	s1.Delete(1)          // Remove an element
 
 	fmt.Println("Set 1:", s1) // {2 3 4 7} (Sorted in output)
 	fmt.Printf("Size of s1: %d\n", s1.Size())
 
-	// 3. Membership Checks
+	// Membership Checks
 	if s1.Contains(3) {
 		fmt.Println("Set 1 contains 3")
 	}
 
-	// 4. Set Algebra (Union, Intersection, Difference)
+	// Creating a new set from a list of integers
+	s2 := set.Of(3, 4, 5, 6)
+
+	// Set Algebra (Union, Intersection, Difference)
 	// Union: All elements from both sets
 	u := set.Union(s1, s2)
 	fmt.Println("Union:", u) // {2 3 4 5 6 7}
@@ -39,13 +40,6 @@ func Example() {
 	d := set.Difference(s1, s2)
 	fmt.Println("Difference (s1 - s2):", d) // {2 7}
 
-	// 5. Functional & Iterator Support (Go 1.23+)
-	// Use DeleteFunc to remove all even numbers
-	s1.DeleteFunc(func(n int) bool {
-		return n%2 == 0
-	})
-	fmt.Println("s1 after deleting evens:", s1) // {3 7}
-
 	// Output:
 	// Set 1: {2 3 4 7}
 	// Size of s1: 4
@@ -53,7 +47,6 @@ func Example() {
 	// Union: {2 3 4 5 6 7}
 	// Intersection: {3 4}
 	// Difference (s1 - s2): {2 7}
-	// s1 after deleting evens: {3 7}
 }
 
 func ExampleCollect() {

@@ -46,6 +46,7 @@ func TestSet_AddSeq(t *testing.T) {
 		{"add none to empty", set.Of[int](), set.Of[int]().All(), set.Of[int]()},
 		{"add many to zero", set.Of[int](), set.Of(1, 2).All(), set.Of(1, 2)},
 		{"add none to zero", set.Set[int]{}, set.Of[int]().All(), set.Of[int]()},
+		{"seq is nil", set.Of(1), nil, set.Of(1)},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -143,6 +144,7 @@ func TestSet_ContainsAny(t *testing.T) {
 		{"zero set with non-empty", set.Set[int]{}, set.Of(1).All(), false},
 		{"empty set with empty seq", set.Of[int](), set.Of[int]().All(), false},
 		{"zero set with empty seq", set.Set[int]{}, set.Of[int]().All(), false},
+		{"seq is nil", set.Of(1, 2), nil, false},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -169,6 +171,7 @@ func TestSet_ContainsAll(t *testing.T) {
 		{"zero set with non-empty", set.Set[int]{}, set.Of(1).All(), false},
 		{"empty set with empty seq", set.Of[int](), set.Of[int]().All(), true},
 		{"zero set with empty seq", set.Set[int]{}, set.Of[int]().All(), true},
+		{"seq is nil", set.Of(1, 2), nil, true},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -329,6 +332,7 @@ func TestSet_DeleteSeq(t *testing.T) {
 		{"zero set with non-empty seq", set.Set[int]{}, set.Of(1).All(), set.Set[int]{}, 0},
 		{"empty set with empty seq", set.Of[int](), set.Of[int]().All(), set.Of[int](), 0},
 		{"zero set with empty seq", set.Set[int]{}, set.Of[int]().All(), set.Set[int]{}, 0},
+		{"seq is nil", set.Of(1, 2), nil, set.Of(1, 2), 0},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

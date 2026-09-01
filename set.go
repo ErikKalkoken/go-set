@@ -66,6 +66,9 @@ func (s *Set[E]) Add(v ...E) {
 
 // AddSeq adds the values from seq to s.
 func (s *Set[E]) AddSeq(seq iter.Seq[E]) {
+	if seq == nil {
+		return
+	}
 	for v := range seq {
 		s.Add(v)
 	}
@@ -90,6 +93,9 @@ func (s Set[E]) Contains(v E) bool {
 
 // ContainsAny reports whether any of the elements in seq are in s.
 func (s Set[E]) ContainsAny(seq iter.Seq[E]) bool {
+	if seq == nil {
+		return false
+	}
 	for v := range seq {
 		if _, ok := s.m[v]; ok {
 			return true
@@ -100,6 +106,9 @@ func (s Set[E]) ContainsAny(seq iter.Seq[E]) bool {
 
 // ContainsAll reports whether all of the elements in seq are in s.
 func (s Set[E]) ContainsAll(seq iter.Seq[E]) bool {
+	if seq == nil {
+		return true
+	}
 	for v := range seq {
 		if _, ok := s.m[v]; !ok {
 			return false
@@ -151,6 +160,9 @@ func (s Set[E]) DeleteFunc(del func(E) bool) int {
 // Elements that are not present are ignored.
 // It returns the number of deleted elements.
 func (s Set[E]) DeleteSeq(seq iter.Seq[E]) int {
+	if seq == nil {
+		return 0
+	}
 	var c int
 	for v := range seq {
 		_, ok := s.m[v]
@@ -264,7 +276,7 @@ func Collect[E comparable](seq iter.Seq[E]) Set[E] {
 func Difference[E comparable](s Set[E], others ...Set[E]) Set[E] {
 	l := len(others)
 	if l == 0 {
-		return s
+		return s.Clone()
 	}
 	var r, o Set[E]
 	if l == 1 {
@@ -327,11 +339,13 @@ func Max[E comparableAndOrderable](s Set[E]) E {
 		panic("set.Max: empty set")
 	}
 	var m E
+	first := true
 	for x := range s.All() {
-		m = x
-		break
-	}
-	for x := range s.All() {
+		if first {
+			m = x
+			first = false
+			continue
+		}
 		m = max(m, x)
 	}
 	return m
@@ -339,17 +353,19 @@ func Max[E comparableAndOrderable](s Set[E]) E {
 
 // MaxFunc returns the maximal value in s, using cmp to compare elements.
 // It panics if s is empty.
-// If there is more than one maximal element according to the cmp function, MaxFunc returns the first one.
+// If there is more than one maximal element, which one is returned is unspecified.
 func MaxFunc[E comparable](s Set[E], cmp func(a, b E) int) E {
 	if s.Size() < 1 {
 		panic("set.MaxFunc: empty set")
 	}
 	var m E
+	first := true
 	for x := range s.All() {
-		m = x
-		break
-	}
-	for x := range s.All() {
+		if first {
+			m = x
+			first = false
+			continue
+		}
 		if cmp(x, m) > 0 {
 			m = x
 		}
@@ -363,11 +379,13 @@ func Min[E comparableAndOrderable](s Set[E]) E {
 		panic("set.Min: empty set")
 	}
 	var m E
+	first := true
 	for x := range s.All() {
-		m = x
-		break
-	}
-	for x := range s.All() {
+		if first {
+			m = x
+			first = false
+			continue
+		}
 		m = min(m, x)
 	}
 	return m
@@ -375,17 +393,19 @@ func Min[E comparableAndOrderable](s Set[E]) E {
 
 // MinFunc returns the minimal value in s, using cmp to compare elements.
 // It panics if s is empty.
-// If there is more than one minimal element according to the cmp function, MinFunc returns the first one.
+// If there is more than one minimal element, which one is returned is unspecified.
 func MinFunc[E comparable](s Set[E], cmp func(a, b E) int) E {
 	if s.Size() < 1 {
 		panic("set.MinFunc: empty set")
 	}
 	var m E
+	first := true
 	for x := range s.All() {
-		m = x
-		break
-	}
-	for x := range s.All() {
+		if first {
+			m = x
+			first = false
+			continue
+		}
 		if cmp(x, m) < 0 {
 			m = x
 		}
